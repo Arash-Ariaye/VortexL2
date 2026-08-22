@@ -3,7 +3,7 @@
 # VortexL2 Uninstaller
 # L2TPv3 Tunnel Manager for Ubuntu/Debian
 #
-# Usage: bash <(curl -Ls https://raw.githubusercontent.com/iliya-Developer/VortexL2/main/uninstall.sh)
+# Usage: bash <(curl -Ls https://raw.githubusercontent.com/Arash-Ariaye/VortexL2/main/uninstall.sh)
 #
 
 set -e

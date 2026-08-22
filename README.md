@@ -11,7 +11,7 @@ A modular, production-quality CLI tool for managing L2TPv3 or EasyTier mesh tunn
    \ \/ / _ \| '__| __/ _ \ \/ / |     / / 
     \  / (_) | |  | ||  __/>  <| |____/ /_ 
      \/ \___/|_|   \__\___/_/\_\______|____|
-                                    v4.0.0
+                                    v4.1.0
 ```
 
 ## ✨ Features
@@ -20,12 +20,13 @@ A modular, production-quality CLI tool for managing L2TPv3 or EasyTier mesh tunn
 - 🌐 **Two tunnel types:** L2TPv3 or EasyTier mesh
 - 🚀 **HAProxy port forwarding**: High performance, manual activation
 - 🔄 Systemd integration for persistence
+- 🛡️ Health watchdog with auto-recovery
 - 📦 One-liner installation
 
 ## 📦 Installation
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/iliya-Developer/VortexL2/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/Arash-Ariaye/VortexL2/main/install.sh)
 ```
 
 During installation, choose:
@@ -35,7 +36,13 @@ During installation, choose:
 ### Install Specific Version
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/iliya-Developer/VortexL2/main/install.sh) v4.0.0
+bash <(curl -Ls https://raw.githubusercontent.com/Arash-Ariaye/VortexL2/main/install.sh) v4.1.0
+```
+
+### Download ZIP
+
+```
+https://github.com/Arash-Ariaye/VortexL2/archive/refs/tags/v4.1.0.zip
 ```
 
 ## 🚀 Quick Start
@@ -58,21 +65,21 @@ sudo vortexl2
 
 ### L2TPv3 Setup
 
-| Parameter | IRAN | KHAREJ |
-|-----------|------|--------|
-| Local IP | 1.2.3.4 | 5.6.7.8 |
-| Remote IP | 5.6.7.8 | 1.2.3.4 |
+| Parameter    | IRAN          | KHAREJ        |
+|--------------|---------------|---------------|
+| Local IP     | 1.2.3.4       | 5.6.7.8       |
+| Remote IP    | 5.6.7.8       | 1.2.3.4       |
 | Interface IP | 10.30.30.1/30 | 10.30.30.2/30 |
-| Tunnel ID | 1000 | 2000 |
+| Tunnel ID    | 1000          | 2000          |
 
 ### EasyTier Setup
 
-| Parameter | IRAN | KHAREJ |
-|-----------|------|--------|
-| Tunnel IP | 10.155.155.1 | 10.155.155.2 |
-| Peer IP | (Kharej public) | (Iran public) |
-| Port | 2070 | 2070 |
-| Secret | vortexl2 | vortexl2 |
+| Parameter | IRAN             | KHAREJ        |
+|-----------|------------------|---------------|
+| Tunnel IP | 10.155.155.1     | 10.155.155.2  |
+| Peer IP   | (Kharej public)  | (Iran public) |
+| Port      | 2070             | 2070          |
+| Secret    | vortexl2         | vortexl2      |
 
 ## 🔧 Services
 
@@ -81,9 +88,11 @@ sudo vortexl2
 sudo systemctl status vortexl2-tunnel          # L2TPv3
 sudo systemctl status vortexl2-easytier-*      # EasyTier
 sudo systemctl status vortexl2-forward-daemon
+sudo systemctl status vortexl2-watchdog
 
 # View logs
 journalctl -u vortexl2-forward-daemon -f
+journalctl -u vortexl2-watchdog -f
 ```
 
 ## 🔍 Troubleshooting
@@ -101,13 +110,13 @@ journalctl -u vortexl2-forward-daemon -f
 ## 🔄 Uninstall
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/iliya-Developer/VortexL2/main/uninstall.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/Arash-Ariaye/VortexL2/main/uninstall.sh)
 ```
 
 ## ⚠️ Security
 
-- **L2TPv3**: NO encryption. Use IPsec or encrypted apps.
-- **EasyTier**: Built-in encryption.
+- **L2TPv3**: NO encryption. Use IPsec or encrypted apps on top.
+- **EasyTier**: Built-in encryption enabled by default.
 
 ## 📄 License
 
@@ -115,4 +124,4 @@ MIT License
 
 ## 👤 Author
 
-Telegram: @iliyadevsh
+GitHub: [Arash-Ariaye](https://github.com/Arash-Ariaye/VortexL2)

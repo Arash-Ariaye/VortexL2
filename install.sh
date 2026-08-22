@@ -4,8 +4,8 @@
 # L2TPv3 & EasyTier Tunnel Manager for Ubuntu/Debian
 #
 # Usage: 
-#   bash <(curl -Ls https://raw.githubusercontent.com/iliya-Developer/VortexL2/main/install.sh)
-#   bash <(curl -Ls https://raw.githubusercontent.com/iliya-Developer/VortexL2/main/install.sh) v1.1.0
+#   bash <(curl -Ls https://raw.githubusercontent.com/Arash-Ariaye/VortexL2/main/install.sh)
+#   bash <(curl -Ls https://raw.githubusercontent.com/Arash-Ariaye/VortexL2/main/install.sh) v4.1.0
 #
 
 set -e
@@ -22,7 +22,7 @@ INSTALL_DIR="/opt/vortexl2"
 BIN_PATH="/usr/local/bin/vortexl2"
 SYSTEMD_DIR="/etc/systemd/system"
 CONFIG_DIR="/etc/vortexl2"
-GITHUB_REPO="iliya-Developer/VortexL2"
+GITHUB_REPO="Arash-Ariaye/VortexL2"
 REPO_URL="https://github.com/${GITHUB_REPO}.git"
 REPO_BRANCH="main"
 
@@ -98,7 +98,7 @@ get_latest_version() {
     fi
 }
 
-# Check if version supports EasyTier (v4.0.0+)
+# Check if version supports EasyTier (v4.1.0+)
 version_supports_easytier() {
     local version="$1"
     # main branch always has latest
@@ -108,7 +108,7 @@ version_supports_easytier() {
     # Extract version number (remove 'v' prefix)
     local ver_num="${version#v}"
     local major="${ver_num%%.*}"
-    # EasyTier requires v4.0.0 or higher
+    # EasyTier requires v4.1.0 or higher
     if [ "$major" -ge 4 ] 2>/dev/null; then
         return 0
     else
@@ -125,7 +125,7 @@ if [ -n "$VERSION" ]; then
         # Check EasyTier compatibility
         if [ "$TUNNEL_MODE" = "easytier" ] && ! version_supports_easytier "$VERSION"; then
             echo -e "${RED}✗ Error: Version ${VERSION} does not support EasyTier!${NC}"
-            echo -e "${YELLOW}EasyTier requires v4.0.0 or higher.${NC}"
+            echo -e "${YELLOW}EasyTier requires v4.1.0 or higher.${NC}"
             echo -e "${YELLOW}Installing from ${REPO_BRANCH} branch instead...${NC}"
             DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${REPO_BRANCH}.tar.gz"
             INSTALL_VERSION="${REPO_BRANCH} (EasyTier)"
@@ -151,7 +151,7 @@ else
             INSTALL_VERSION="$LATEST_VERSION"
         else
             echo -e "${YELLOW}Latest release (${LATEST_VERSION:-none}) does not support EasyTier.${NC}"
-            echo -e "${YELLOW}Installing from ${REPO_BRANCH} branch (v4.0.0+)...${NC}"
+            echo -e "${YELLOW}Installing from ${REPO_BRANCH} branch (v4.1.0+)...${NC}"
             DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${REPO_BRANCH}.tar.gz"
             INSTALL_VERSION="${REPO_BRANCH} (EasyTier)"
         fi
@@ -412,7 +412,7 @@ echo -e "${YELLOW}Quick start:${NC}"
 echo -e "  ${GREEN}sudo vortexl2${NC}       - Open management panel"
 echo ""
 echo -e "${CYAN}Install specific version:${NC}"
-echo -e "  ${GREEN}bash <(curl -Ls https://raw.githubusercontent.com/${GITHUB_REPO}/main/install.sh) v1.1.0${NC}"
+echo -e "  ${GREEN}bash <(curl -Ls https://raw.githubusercontent.com/${GITHUB_REPO}/main/install.sh) v4.1.0${NC}"
 echo ""
 echo -e "${RED}Security Note:${NC}"
 if [ "$TUNNEL_MODE" = "l2tpv3" ]; then
