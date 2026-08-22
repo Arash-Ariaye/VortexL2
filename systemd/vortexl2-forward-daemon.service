@@ -1,9 +1,11 @@
 [Unit]
-Description=VortexL2 Port Forward Daemon (HAProxy)
-After=network.target vortexl2-tunnel.service haproxy.service
+Description=VortexL2 Port Forward Daemon (HAProxy/Socat)
+After=network.target
 Requires=network.target
-Wants=haproxy.service
-Documentation=file:///usr/share/doc/vortexl2/README.md
+# BUG FIX #18: Removed hard dependency on vortexl2-tunnel.service and haproxy.service
+# These caused the daemon to fail to start in EasyTier mode (no tunnel service)
+# and created circular dependency issues when haproxy wasn't yet enabled.
+Documentation=file:///opt/vortexl2/README.md
 
 [Service]
 Type=simple
@@ -13,6 +15,10 @@ ExecStart=/usr/bin/python3 -m vortexl2.forward_daemon
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
+# BUG FIX #19: Added StartLimitIntervalSec to prevent systemd from giving up
+# after rapid crash-restart cycles (e.g., haproxy config invalid on first boot)
+StartLimitIntervalSec=60
+StartLimitBurst=5
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=vortexl2-forward

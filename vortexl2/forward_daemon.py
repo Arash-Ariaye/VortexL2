@@ -2,8 +2,7 @@
 """
 VortexL2 Forward Daemon
 
-Manages HAProxy-based port forwarding based on global config.
-HAProxy is NOT auto-started - user must enable forward mode first.
+Manages HAProxy/Socat-based port forwarding based on global config.
 """
 
 from __future__ import annotations
@@ -15,7 +14,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Ensure we can import the package
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from vortexl2.config import ConfigManager, GlobalConfig
@@ -32,113 +30,102 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class ForwardDaemon:
-    """Manages HAProxy-based port forwarding."""
-    
+    """Manages HAProxy/Socat-based port forwarding."""
+
     def __init__(self):
         self.config_manager = ConfigManager()
         self.forward_manager = None
         self.running = False
-    
+        # BUG FIX #3: Use asyncio.Event for clean shutdown instead of busy-loop on bool
+        self._stop_event = asyncio.Event()
+
     async def start(self):
         """Start the forward daemon."""
         logger.info("Starting VortexL2 Forward Daemon")
-        
-        # Get forward mode
+
         mode = get_forward_mode()
         logger.info(f"Forward mode: {mode}")
-        
+
         if mode == "none":
-            logger.info("Port forwarding is DISABLED. Use 'sudo vortexl2' to enable HAProxy mode.")
-            # Stop both HAProxy and any socat services
+            logger.info("Port forwarding is DISABLED. Use 'sudo vortexl2' to enable a mode.")
             subprocess.run("systemctl stop haproxy", shell=True, capture_output=True)
             subprocess.run("pkill -f 'socat.*TCP-LISTEN'", shell=True, capture_output=True)
             self.running = True
-            # Just wait - don't start any forwarding
-            try:
-                while self.running:
-                    await asyncio.sleep(1)
-            except Exception as e:
-                logger.error(f"Error in forward daemon: {e}")
+            # BUG FIX #3: Wait on event instead of while loop + sleep(1)
+            await self._stop_event.wait()
             return
-        
-        # Handle specific modes
+
         if mode == "haproxy":
             logger.info("Starting HAProxy-based port forwarding")
-            # Stop any socat processes first to free ports
             subprocess.run("pkill -f 'socat.*TCP-LISTEN'", shell=True, capture_output=True)
-            # Ensure HAProxy service is running
             result = subprocess.run(
                 "systemctl start haproxy",
-                shell=True,
-                capture_output=True,
-                text=True
+                shell=True, capture_output=True, text=True
             )
             if result.returncode != 0:
-                logger.warning(f"Could not start HAProxy: {result.stderr}")
+                logger.warning(f"Could not start HAProxy: {result.stderr.strip()}")
         elif mode == "socat":
             logger.info("Starting Socat-based port forwarding")
-            # Stop HAProxy first to free ports
             logger.info("Stopping HAProxy to free ports for Socat...")
             subprocess.run("systemctl stop haproxy", shell=True, capture_output=True)
-            
+
         self.running = True
-        
-        # Get forward manager
         self.forward_manager = get_forward_manager(None)
-        
+
         if not self.forward_manager:
             logger.error("Failed to get forward manager")
             return
-        
-        # Start all forwards
+
         logger.info(f"Starting {mode} forwards for all configured tunnels")
         success, msg = await self.forward_manager.start_all_forwards()
         if not success:
             logger.error(f"Failed to start port forwards: {msg}")
         else:
             logger.info(msg)
-        
+
         logger.info("Forward Daemon started successfully")
-        
-        # Keep running
-        try:
-            while self.running:
-                await asyncio.sleep(1)
-        except Exception as e:
-            logger.error(f"Error in forward daemon: {e}")
-    
+
+        # BUG FIX #3: Wait on event instead of while self.running loop
+        await self._stop_event.wait()
+
     async def stop(self):
         """Stop the forward daemon."""
         logger.info("Stopping VortexL2 Forward Daemon")
         self.running = False
-        
+
         if self.forward_manager:
             logger.info("Stopping active forwards")
             await self.forward_manager.stop_all_forwards()
-        
+
+        # Signal the event so start() unblocks
+        self._stop_event.set()
         logger.info("Forward Daemon stopped")
 
-# Main entry point for the forward daemon
+
 async def main():
     """Main entry point."""
     daemon = ForwardDaemon()
-    
-    # Setup signal handlers
-    def handle_signal(sig, frame):
-        logger.info(f"Received signal {sig}")
-        asyncio.create_task(daemon.stop())
-    
-    signal.signal(signal.SIGTERM, handle_signal)
-    signal.signal(signal.SIGINT, handle_signal)
-    
+
+    loop = asyncio.get_running_loop()
+
+    # BUG FIX #4: asyncio.create_task() called from a sync signal handler crashes.
+    # Use loop.create_task() from the running loop via add_signal_handler().
+    def handle_signal():
+        logger.info("Received shutdown signal")
+        loop.create_task(daemon.stop())
+
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, handle_signal)
+
     try:
         await daemon.start()
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
         await daemon.stop()
     except Exception as e:
-        logger.error(f"Fatal error: {e}")
+        logger.error(f"Fatal error: {e}", exc_info=True)
         sys.exit(1)
 
 

@@ -6,11 +6,17 @@ Wants=vortexl2-tunnel.service
 [Service]
 Type=simple
 User=root
+WorkingDirectory=/opt/vortexl2
+Environment=PYTHONPATH=/opt/vortexl2
 ExecStart=/usr/bin/python3 -m vortexl2.tunnel_watchdog
 Restart=on-failure
 RestartSec=10
+# BUG FIX #19: Same StartLimit fix
+StartLimitIntervalSec=60
+StartLimitBurst=5
 StandardOutput=journal
 StandardError=journal
+SyslogIdentifier=vortexl2-watchdog
 
 [Install]
 WantedBy=multi-user.target
